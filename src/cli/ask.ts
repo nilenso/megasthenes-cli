@@ -7,10 +7,10 @@
  */
 
 import { Client, type ErrorType, type StreamEvent } from "@nilenso/megasthenes";
-import { ArgParseError, ASK_HELP, parseAskArgs } from "./ask-args.ts";
+import { ASK_HELP, ArgParseError, parseAskArgs } from "./ask-args.ts";
 import { resolveConfig } from "./ask-config.ts";
-import { findMissingTools, formatMissingToolsError } from "./check-tools.ts";
 import { extractFinalAnswer, formatSummary, renderMarkdown } from "./ask-render.ts";
+import { findMissingTools, formatMissingToolsError } from "./check-tools.ts";
 
 const ERROR_EXIT_CODES: Record<ErrorType, number> = {
 	internal_error: 1,
@@ -130,9 +130,7 @@ function forwardEvent(ev: StreamEvent): void {
 			}
 			return;
 		case "compaction":
-			process.stderr.write(
-				`· compacted ${ev.tokensBefore} → ${ev.tokensAfter} tokens\n`,
-			);
+			process.stderr.write(`· compacted ${ev.tokensBefore} → ${ev.tokensAfter} tokens\n`);
 			return;
 		case "error":
 			process.stderr.write(`· error[${ev.code}] ${ev.message}\n`);

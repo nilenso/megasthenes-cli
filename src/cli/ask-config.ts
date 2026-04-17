@@ -15,10 +15,10 @@ import {
 	type AskOptions,
 	type ClientConfig,
 	type ModelConfig,
-	nullLogger,
 	type SandboxClientConfig,
 	type SessionConfig,
 	type ThinkingConfig,
+	nullLogger,
 } from "@nilenso/megasthenes";
 import { ArgParseError, type ParsedArgs } from "./ask-args.ts";
 

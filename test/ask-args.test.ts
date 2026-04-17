@@ -64,9 +64,7 @@ describe("parseAskArgs", () => {
 	});
 
 	it("rejects non-positive --max-iterations", () => {
-		expect(() => parseAskArgs(["repo", "q", "--max-iterations", "0"])).toThrow(
-			/positive integer/,
-		);
+		expect(() => parseAskArgs(["repo", "q", "--max-iterations", "0"])).toThrow(/positive integer/);
 	});
 
 	it("captures --help", () => {

@@ -42,10 +42,7 @@ describe("resolveConfig", () => {
 	});
 
 	it("combines --thinking adaptive with --thinking-effort", () => {
-		const r = resolveConfig(
-			baseArgs(["--thinking", "adaptive", "--thinking-effort", "low"]),
-			{},
-		);
+		const r = resolveConfig(baseArgs(["--thinking", "adaptive", "--thinking-effort", "low"]), {});
 		expect(r.sessionConfig.thinking).toEqual({ type: "adaptive", effort: "low" });
 	});
 
@@ -63,17 +60,12 @@ describe("resolveConfig", () => {
 	});
 
 	it("rejects sandbox sub-options without a base URL", () => {
-		expect(() =>
-			resolveConfig(baseArgs(["--sandbox-secret", "s"]), {}),
-		).toThrow(ArgParseError);
+		expect(() => resolveConfig(baseArgs(["--sandbox-secret", "s"]), {})).toThrow(ArgParseError);
 	});
 
 	it("rejects mutually exclusive --system-prompt and --system-prompt-file", () => {
 		expect(() =>
-			resolveConfig(
-				baseArgs(["--system-prompt", "x", "--system-prompt-file", "p.md"]),
-				{},
-			),
+			resolveConfig(baseArgs(["--system-prompt", "x", "--system-prompt-file", "p.md"]), {}),
 		).toThrow(ArgParseError);
 	});
 

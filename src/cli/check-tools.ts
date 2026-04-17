@@ -11,7 +11,7 @@
  * macOS and Linux only.
  */
 
-import { accessSync, constants, statSync } from "node:fs";
+import { constants, accessSync, statSync } from "node:fs";
 import { delimiter, join } from "node:path";
 
 export const REQUIRED_TOOLS = ["git", "rg", "fd"] as const;
