@@ -52,6 +52,12 @@
   },
   "dependencies": {
     "@nilenso/megasthenes": "file:../ask-forge",
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.215.0",
+    "@opentelemetry/resources": "^2.7.0",
+    "@opentelemetry/sdk-trace-base": "^2.7.0",
+    "@opentelemetry/sdk-trace-node": "^2.7.0",
+    "@opentelemetry/semantic-conventions": "^1.40.0",
     "marked": "^15.0.0",
     "marked-terminal": "^7.2.1"
   },

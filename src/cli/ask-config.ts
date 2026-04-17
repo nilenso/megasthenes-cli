@@ -29,6 +29,7 @@ export interface ResolvedConfig {
 	question: string;
 	verbose: boolean;
 	json: boolean;
+	tracingEndpoint?: string;
 }
 
 export type FileConfig = Partial<
@@ -48,6 +49,7 @@ export type FileConfig = Partial<
 		| "sandboxBaseUrl"
 		| "sandboxTimeoutMs"
 		| "sandboxSecret"
+		| "tracingEndpoint"
 	>
 >;
 
@@ -71,6 +73,7 @@ const ALLOWED_FILE_KEYS = [
 	"sandboxBaseUrl",
 	"sandboxTimeoutMs",
 	"sandboxSecret",
+	"tracingEndpoint",
 ] as const;
 
 export function defaultConfigPath(env: NodeJS.ProcessEnv): string | undefined {
@@ -148,6 +151,7 @@ export function parseFileConfig(raw: string, path: string): FileConfig {
 	setString("systemPromptFile");
 	setString("sandboxBaseUrl");
 	setString("sandboxSecret");
+	setString("tracingEndpoint");
 	setPosInt("maxIterations");
 	setPosInt("sandboxTimeoutMs");
 	setBool("verbose");
@@ -211,6 +215,8 @@ export function resolveConfig(
 		logger: nullLogger,
 	};
 
+	const tracingEndpoint = args.tracingEndpoint ?? file.tracingEndpoint;
+
 	return {
 		clientConfig,
 		sessionConfig,
@@ -218,6 +224,7 @@ export function resolveConfig(
 		question: args.question,
 		verbose: args.verbose || (file.verbose ?? false),
 		json: args.json || (file.json ?? false),
+		...(tracingEndpoint !== undefined ? { tracingEndpoint } : {}),
 	};
 }
 

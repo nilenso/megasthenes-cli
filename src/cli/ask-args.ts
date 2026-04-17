@@ -30,6 +30,9 @@ export interface ParsedArgs {
 	sandboxTimeoutMs?: number;
 	sandboxSecret?: string;
 
+	// Tracing
+	tracingEndpoint?: string;
+
 	// Output
 	verbose: boolean;
 	json: boolean;
@@ -120,6 +123,10 @@ export function parseAskArgs(argv: readonly string[]): ParsedArgs {
 				out.sandboxSecret = consume();
 				break;
 
+			case "--tracing-endpoint":
+				out.tracingEndpoint = consume();
+				break;
+
 			case "--verbose":
 				out.verbose = true;
 				break;
@@ -170,6 +177,11 @@ Sandbox options:
   --sandbox-base-url <url>      Enable sandbox mode and point at this worker URL.
   --sandbox-timeout-ms <ms>     Per-request timeout for sandbox calls.
   --sandbox-secret <s>          Shared secret for sandbox auth.
+
+Tracing options:
+  --tracing-endpoint <url>      OTLP/HTTP traces endpoint (e.g. Arize Phoenix at
+                                http://localhost:6006). The path "/v1/traces" is
+                                appended automatically if omitted.
 
 Output options:
   --verbose                     Stream tool calls, iteration starts, and errors to stderr.

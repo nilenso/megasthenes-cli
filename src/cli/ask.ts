@@ -11,6 +11,7 @@ import { ASK_HELP, ArgParseError, parseAskArgs } from "./ask-args.ts";
 import { resolveConfig } from "./ask-config.ts";
 import { extractFinalAnswer, formatSummary, renderMarkdown } from "./ask-render.ts";
 import { findMissingTools, formatMissingToolsError } from "./check-tools.ts";
+import { setupTracing, shutdownTracing } from "./tracing.ts";
 
 const ERROR_EXIT_CODES: Record<ErrorType, number> = {
 	internal_error: 1,
@@ -50,7 +51,13 @@ export async function runAsk(argv: readonly string[]): Promise<number> {
 		throw e;
 	}
 
-	const { clientConfig, sessionConfig, askOptions, question, verbose, json } = resolved;
+	const { clientConfig, sessionConfig, askOptions, question, verbose, json, tracingEndpoint } =
+		resolved;
+
+	if (tracingEndpoint !== undefined) {
+		setupTracing(tracingEndpoint);
+		if (verbose) process.stderr.write(`[tracing] OTLP endpoint: ${tracingEndpoint}\n`);
+	}
 
 	// Preflight: in local mode the library shells out to git/rg/fd. Skip when
 	// running against a sandbox worker (those tools live in the worker, not here).
@@ -111,6 +118,8 @@ export async function runAsk(argv: readonly string[]): Promise<number> {
 		} catch {
 			// ignore close errors
 		}
+		// Flush pending spans before the process exits.
+		await shutdownTracing();
 	}
 }
 
