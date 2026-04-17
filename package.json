@@ -1,0 +1,61 @@
+{
+  "name": "megasthenes-cli",
+  "version": "0.1.0",
+  "description": "Terminal CLI for megasthenes — ask natural-language questions about any GitHub or GitLab repository and get a markdown-rendered, source-cited answer.",
+  "keywords": [
+    "cli",
+    "llm",
+    "ai",
+    "code-search",
+    "repository",
+    "github",
+    "gitlab",
+    "anthropic",
+    "openrouter",
+    "megasthenes"
+  ],
+  "homepage": "https://github.com/nilenso/megasthenes-cli#readme",
+  "bugs": {
+    "url": "https://github.com/nilenso/megasthenes-cli/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nilenso/megasthenes-cli.git"
+  },
+  "license": "MIT",
+  "author": "Kiran Gangadharan <bills@nilenso.com>",
+  "type": "module",
+  "bin": {
+    "megasthenes": "dist/cli/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "scripts": {
+    "ask": "bun run src/cli/index.ts ask",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "build": "bun build src/cli/index.ts --outdir dist/cli --target node --format esm --minify",
+    "check:publishable": "node -e \"const d=require('./package.json').dependencies['@nilenso/megasthenes']; if(d.startsWith('file:')||d.startsWith('link:')){console.error('refusing to publish: @nilenso/megasthenes is still a local dep ('+d+'). Bump it to a published JSR version first.');process.exit(1)}\"",
+    "prepublishOnly": "bun run check:publishable && bun run typecheck && bun test && bun run build"
+  },
+  "dependencies": {
+    "@nilenso/megasthenes": "file:../ask-forge",
+    "marked": "^15.0.0",
+    "marked-terminal": "^7.2.1"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.11",
+    "@types/marked-terminal": "^6.1.1",
+    "typescript": "^5.6.3"
+  }
+}
