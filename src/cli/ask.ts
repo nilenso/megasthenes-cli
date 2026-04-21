@@ -67,6 +67,8 @@ export async function runAsk(argv: readonly string[]): Promise<number> {
 			process.stderr.write(formatMissingToolsError(missing));
 			return 1;
 		}
+	} else {
+		process.stderr.write(`Using sandbox at ${clientConfig.sandbox.baseUrl}\n`);
 	}
 
 	const controller = new AbortController();
