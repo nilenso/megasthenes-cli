@@ -71,7 +71,15 @@ For untrusted repositories, run tool execution in an isolated container via the 
 
 ## Exit codes
 
-`0` success · `1` internal error · `2` max iterations · `3` context overflow · `4` provider / network error · `64` invalid CLI usage · `130` aborted (Ctrl-C).
+| Code | Meaning                                               |
+| ---- | ----------------------------------------------------- |
+| 0    | success                                               |
+| 1    | `internal_error`                                      |
+| 2    | `max_iterations` (gave up before producing an answer) |
+| 3    | `context_overflow`                                    |
+| 4    | `provider_error` / `network_error` / `empty_response` |
+| 64   | invalid CLI usage                                     |
+| 130  | aborted (Ctrl-C)                                      |
 
 ## Development
 
