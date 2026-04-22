@@ -34,7 +34,7 @@ export interface ParsedArgs {
 	tracingEndpoint?: string;
 
 	// Output
-	verbose: boolean;
+	responseOnly: boolean;
 	json: boolean;
 	help: boolean;
 }
@@ -42,7 +42,7 @@ export interface ParsedArgs {
 export class ArgParseError extends Error {}
 
 export function parseAskArgs(argv: readonly string[]): ParsedArgs {
-	const out: ParsedArgs = { verbose: false, json: false, help: false };
+	const out: ParsedArgs = { responseOnly: false, json: false, help: false };
 	const positionals: string[] = [];
 
 	const need = (flag: string, value: string | undefined): string => {
@@ -134,8 +134,8 @@ export function parseAskArgs(argv: readonly string[]): ParsedArgs {
 				out.tracingEndpoint = consume();
 				break;
 
-			case "--verbose":
-				out.verbose = true;
+			case "--response-only":
+				out.responseOnly = true;
 				break;
 			case "--json":
 				out.json = true;
@@ -200,7 +200,8 @@ Tracing options:
                                 appended automatically if omitted.
 
 Output options:
-  --verbose                     Stream tool calls, iteration starts, and errors to stderr.
+  --response-only               Suppress the activity log on stderr and emit only the final
+                                rendered answer on stdout. Handy for piping into files/tools.
   --json                        Emit the full TurnResult as JSON to stdout instead of markdown.
   -h, --help                    Show this help and exit.
 

@@ -80,9 +80,13 @@ megasthenes ask <repo-url> "<question>" [options]
 megasthenes ask --repo https://github.com/owner/repo --question "Audit error handling." \
   --provider anthropic --model claude-sonnet-4-6
 
-# Pin to a tag, stream tool calls to stderr
+# Pin to a tag (tool calls and reasoning stream to stderr by default)
 megasthenes ask --repo https://github.com/owner/repo --question "Summarize the data model." \
-  --commitish v2.3.0 --verbose
+  --commitish v2.3.0
+
+# Pipe just the answer into a file (suppresses the activity log)
+megasthenes ask --repo https://github.com/owner/repo --question "Summarize the data model." \
+  --response-only > summary.md
 
 # JSON output for jq
 megasthenes ask --repo https://github.com/owner/repo --question "List public APIs." --json \

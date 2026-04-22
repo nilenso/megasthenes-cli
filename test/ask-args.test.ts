@@ -6,7 +6,7 @@ describe("parseAskArgs", () => {
 		const a = parseAskArgs(["https://github.com/o/r", "What is this?"]);
 		expect(a.repo).toBe("https://github.com/o/r");
 		expect(a.question).toBe("What is this?");
-		expect(a.verbose).toBe(false);
+		expect(a.responseOnly).toBe(false);
 		expect(a.json).toBe(false);
 	});
 
@@ -44,9 +44,9 @@ describe("parseAskArgs", () => {
 	});
 
 	it("supports --flag=value form", () => {
-		const a = parseAskArgs(["repo", "q", "--model=claude-sonnet-4-6", "--verbose"]);
+		const a = parseAskArgs(["repo", "q", "--model=claude-sonnet-4-6", "--response-only"]);
 		expect(a.model).toBe("claude-sonnet-4-6");
-		expect(a.verbose).toBe(true);
+		expect(a.responseOnly).toBe(true);
 	});
 
 	it("rejects unknown flags", () => {

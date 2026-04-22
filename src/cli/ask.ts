@@ -2,9 +2,10 @@
  * `megasthenes ask` — main command flow.
  *
  * Builds typed configs, opens a Session, drives `session.ask()`, and routes
- * stream events to either a verbose stderr activity log or a single live
- * spinner caption depending on --verbose. The final answer (markdown or JSON)
- * always lands on stdout; process exits with a structured exit code.
+ * stream events to either the full stderr activity log (default) or a single
+ * live spinner caption (when --response-only is set). The final answer
+ * (markdown or JSON) always lands on stdout; process exits with a structured
+ * exit code.
  */
 
 import { Client, type ErrorType, type StreamEvent } from "@nilenso/megasthenes";
@@ -65,12 +66,12 @@ export async function runAsk(argv: readonly string[]): Promise<number> {
 		throw e;
 	}
 
-	const { clientConfig, sessionConfig, askOptions, question, verbose, json, tracingEndpoint } =
+	const { clientConfig, sessionConfig, askOptions, question, responseOnly, json, tracingEndpoint } =
 		resolved;
 
 	if (tracingEndpoint !== undefined) {
 		setupTracing(tracingEndpoint);
-		if (verbose) process.stderr.write(`${formatSetupLine("tracing", tracingEndpoint)}\n`);
+		if (!responseOnly) process.stderr.write(`${formatSetupLine("tracing", tracingEndpoint)}\n`);
 	}
 
 	// Preflight: in local mode the library shells out to git/rg/fd. Skip when
@@ -81,7 +82,7 @@ export async function runAsk(argv: readonly string[]): Promise<number> {
 			process.stderr.write(formatMissingToolsError(missing));
 			return 1;
 		}
-	} else if (verbose) {
+	} else if (!responseOnly) {
 		const baseUrl = clientConfig.sandbox.baseUrl;
 		const sandboxStatus = new StatusLine();
 		// On a TTY we flash the neutral diamond while the probe runs, then
@@ -97,9 +98,10 @@ export async function runAsk(argv: readonly string[]): Promise<number> {
 	const onSigInt = () => controller.abort();
 	process.on("SIGINT", onSigInt);
 
-	// Non-verbose mode funnels all progress through a single live caption.
-	// Verbose mode never uses the spinner — it gets the full activity log.
-	const spinner = verbose ? undefined : new Spinner();
+	// --response-only funnels all progress through a single live caption so
+	// only the final answer lands on stdout. Without it, the default
+	// activity log gets the full event stream.
+	const spinner = responseOnly ? new Spinner() : undefined;
 	spinner?.start("Connecting…");
 
 	const client = new Client(clientConfig);
@@ -107,10 +109,10 @@ export async function runAsk(argv: readonly string[]): Promise<number> {
 	const cloneStatus = new StatusLine();
 	try {
 		session = await client.connect(sessionConfig, (msg: string) => {
-			if (verbose) cloneStatus.update(formatSetupLine("cloning", ui.dim(msg)));
-			else spinner?.update("Cloning…");
+			if (responseOnly) spinner?.update("Cloning…");
+			else cloneStatus.update(formatSetupLine("cloning", ui.dim(msg)));
 		});
-		if (verbose) {
+		if (!responseOnly) {
 			cloneStatus.finalize(
 				formatSetupLine("cloned", ui.dim("repository ready"), ui.green(sym.check)),
 			);
@@ -127,16 +129,16 @@ export async function runAsk(argv: readonly string[]): Promise<number> {
 	try {
 		const stream = session.ask(question, { ...askOptions, signal: controller.signal });
 
-		if (verbose) {
+		if (responseOnly) {
+			spinner?.update("Exploring…");
+			for await (const ev of stream) updateSpinner(ev, spinner);
+		} else {
 			// Blank line separates the setup block from the agent's work.
 			process.stderr.write("\n");
 			// tool_result doesn't carry params; remember them from tool_use_end so we
 			// can render a single, self-contained line per tool call.
 			const pendingParams = new Map<string, Record<string, unknown>>();
 			for await (const ev of stream) forwardEvent(ev, pendingParams);
-		} else {
-			spinner?.update("Exploring…");
-			for await (const ev of stream) updateSpinner(ev, spinner);
 		}
 
 		const turn = await stream.result();
@@ -148,12 +150,12 @@ export async function runAsk(argv: readonly string[]): Promise<number> {
 			const answer = extractFinalAnswer(turn);
 			if (answer) {
 				// Breathing room between the agent trace and the rendered answer.
-				if (verbose) process.stderr.write("\n");
+				if (!responseOnly) process.stderr.write("\n");
 				process.stdout.write(`${renderMarkdown(answer)}\n`);
 			}
-			// The end-of-turn summary is extra context the user only wants when
-			// they've asked for verbose output; quiet mode shows just the answer.
-			if (verbose) {
+			// The end-of-turn summary is extra context --response-only mode
+			// intentionally suppresses so only the answer reaches stdout.
+			if (!responseOnly) {
 				process.stderr.write(`${formatSummary(turn.usage, turn.metadata, !turn.error)}\n`);
 			}
 		}
@@ -162,7 +164,7 @@ export async function runAsk(argv: readonly string[]): Promise<number> {
 			process.stderr.write(
 				`  ${ui.red(sym.cross)} ${ui.bold(turn.error.errorType)} ${ui.dim(turn.error.message)}\n`,
 			);
-			if (verbose && turn.error.details !== undefined) {
+			if (!responseOnly && turn.error.details !== undefined) {
 				process.stderr.write(ui.dim(`    details: ${safeStringify(turn.error.details)}\n`));
 			}
 			return ERROR_EXIT_CODES[turn.error.errorType] ?? 1;

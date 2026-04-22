@@ -27,7 +27,7 @@ export interface ResolvedConfig {
 	sessionConfig: SessionConfig;
 	askOptions: AskOptions;
 	question: string;
-	verbose: boolean;
+	responseOnly: boolean;
 	json: boolean;
 	tracingEndpoint?: string;
 }
@@ -38,7 +38,7 @@ export type FileConfig = Partial<
 		| "provider"
 		| "model"
 		| "maxIterations"
-		| "verbose"
+		| "responseOnly"
 		| "json"
 		| "token"
 		| "commitish"
@@ -62,7 +62,7 @@ const ALLOWED_FILE_KEYS = [
 	"provider",
 	"model",
 	"maxIterations",
-	"verbose",
+	"responseOnly",
 	"json",
 	"token",
 	"commitish",
@@ -154,7 +154,7 @@ export function parseFileConfig(raw: string, path: string): FileConfig {
 	setString("tracingEndpoint");
 	setPosInt("maxIterations");
 	setPosInt("sandboxTimeoutMs");
-	setBool("verbose");
+	setBool("responseOnly");
 	setBool("json");
 
 	if (obj.thinking !== undefined) {
@@ -222,7 +222,7 @@ export function resolveConfig(
 		sessionConfig,
 		askOptions: {},
 		question: args.question,
-		verbose: args.verbose || (file.verbose ?? false),
+		responseOnly: args.responseOnly || (file.responseOnly ?? false),
 		json: args.json || (file.json ?? false),
 		...(tracingEndpoint !== undefined ? { tracingEndpoint } : {}),
 	};
