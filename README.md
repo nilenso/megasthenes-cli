@@ -1,6 +1,6 @@
 # megasthenes-cli
 
-Terminal CLI for [megasthenes](https://github.com/nilenso/megasthenes) — ask natural-language questions about any GitHub or GitLab repository and get a markdown-rendered, source-cited answer.
+A CLI for [megasthenes](https://github.com/nilenso/megasthenes).
 
 ```bash
 megasthenes ask --repo https://github.com/owner/repo --question "What does this project do?"
@@ -18,19 +18,18 @@ brew install git ripgrep fd
 
 # Debian / Ubuntu (fd binary may be `fdfind`)
 sudo apt install git ripgrep fd-find
-
-# Arch
-sudo pacman -S git ripgrep fd
 ```
 
 ```bash
-npm install -g megasthenes-cli     # or: pnpm add -g, yarn global add
+npm install -g megasthenes-cli
 ```
+
+This puts a `megasthenes` executable on your `PATH` (the npm package is `megasthenes-cli`; the installed command is `megasthenes`).
 
 Or run one-off without installing:
 
 ```bash
-npx megasthenes-cli ask --repo <url> --question "<text>"
+npx -p megasthenes-cli megasthenes ask --repo <url> --question "<text>"
 ```
 
 ## Configure
