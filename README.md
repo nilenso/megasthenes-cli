@@ -42,9 +42,6 @@ Set the env var for your LLM provider:
 | Anthropic  | `ANTHROPIC_API_KEY`    |
 | OpenAI     | `OPENAI_API_KEY`       |
 | Google     | `GOOGLE_CLOUD_API_KEY` |
-| Groq       | `GROQ_API_KEY`         |
-| xAI        | `XAI_API_KEY`          |
-| Cerebras   | `CEREBRAS_API_KEY`     |
 
 Optional defaults:
 
@@ -52,6 +49,23 @@ Optional defaults:
 export MEGASTHENES_PROVIDER=openrouter
 export MEGASTHENES_MODEL=anthropic/claude-sonnet-4.6
 ```
+
+### Configuration file
+
+Any CLI flag can also be set in a JSON file at `$XDG_CONFIG_HOME/megasthenes/config.json` (defaults to `~/.config/megasthenes/config.json`). Override the path with the `MEGASTHENES_CONFIG` env var. Keys are the camelCase form of the flag names.
+
+```json
+{
+  "provider": "openrouter",
+  "model": "anthropic/claude-sonnet-4.6",
+  "maxIterations": 8,
+  "thinkingEffort": "medium",
+  "sandboxBaseUrl": "http://localhost:8080",
+  "sandboxTimeoutMs": 60000
+}
+```
+
+Precedence (highest → lowest): CLI flags > env vars > config file > built-in defaults.
 
 ## Usage
 
