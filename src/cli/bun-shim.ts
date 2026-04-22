@@ -94,10 +94,12 @@ function sleepShim(ms: number): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-declare global {
-	var Bun: { spawn: typeof spawnShim; sleep: typeof sleepShim } | undefined;
-}
-
-if (typeof globalThis.Bun === "undefined") {
-	globalThis.Bun = { spawn: spawnShim, sleep: sleepShim };
+// Install the shim on globalThis without touching the global TypeScript
+// namespace — JSR's publish rules forbid `declare global` in published code.
+// The runtime attach is all the downstream library needs; consumers that
+// want `Bun` as a typed global should pull `@types/bun` themselves.
+type BunGlobal = { spawn: typeof spawnShim; sleep: typeof sleepShim };
+const g = globalThis as unknown as { Bun?: BunGlobal };
+if (typeof g.Bun === "undefined") {
+	g.Bun = { spawn: spawnShim, sleep: sleepShim };
 }
