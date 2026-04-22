@@ -2,6 +2,8 @@
 
 Terminal CLI for [megasthenes](https://github.com/nilenso/megasthenes) — ask natural-language questions about any Git repository and get a source-cited, markdown-rendered answer.
 
+![megasthenes-cli in action](docs/images/cli-demo.png)
+
 ```bash
 megasthenes ask --repo https://github.com/owner/repo --question "What does this project do?"
 ```
