@@ -5,6 +5,10 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  # Allows release.yml (and any future workflow) to invoke this as a
+  # dependency; the gating check before publish lives here so we don't
+  # duplicate lint/typecheck/test steps across workflows.
+  workflow_call:
 
 jobs:
   check:

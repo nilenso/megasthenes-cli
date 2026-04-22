@@ -6,8 +6,15 @@ on:
       - 'v*'
 
 jobs:
+  # Run the full lint/typecheck/test gate first. `needs: check` on the
+  # publish job means a single red check short-circuits the whole
+  # release — nothing lands on JSR unless the tag's code is clean.
+  check:
+    uses: ./.github/workflows/ci.yml
+
   publish:
     name: Publish to JSR
+    needs: check
     runs-on: ubuntu-latest
     # id-token: write lets `jsr publish` authenticate via GitHub OIDC instead
     # of a long-lived token stored in repo secrets.
@@ -26,15 +33,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Test
-        run: npm test
 
       - name: Verify tag matches jsr.json version
         run: |
