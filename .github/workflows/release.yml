@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    name: Publish to JSR
+    runs-on: ubuntu-latest
+    # id-token: write lets `jsr publish` authenticate via GitHub OIDC instead
+    # of a long-lived token stored in repo secrets.
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Verify tag matches jsr.json version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg=$(node -p "require('./jsr.json').version")
+          if [ "$tag" != "$pkg" ]; then
+            echo "::error::git tag v$tag does not match jsr.json version $pkg"
+            exit 1
+          fi
+
+      - name: Publish to JSR
+        run: npx jsr publish

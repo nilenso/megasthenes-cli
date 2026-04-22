@@ -1,0 +1,20 @@
+{
+	"name": "@nilenso/megasthenes-cli",
+	"version": "0.1.0",
+	"license": "MIT",
+	"exports": {
+		".": "./src/cli/index.ts"
+	},
+	"exclude": [
+		"dist/",
+		"scripts/",
+		"test/",
+		".github/",
+		".claude/",
+		".tool-versions",
+		"docker-compose.yml",
+		"biome.json",
+		"package-lock.json",
+		"tsconfig.json"
+	]
+}
