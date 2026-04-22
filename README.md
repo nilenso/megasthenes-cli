@@ -22,11 +22,23 @@ brew install git ripgrep fd
 sudo apt install git ripgrep fd-find
 ```
 
+The package is published to [JSR](https://jsr.io/@nilenso/megasthenes-cli) as `@nilenso/megasthenes-cli`. JSR exposes packages to npm/bun under the `@jsr` scope, so first point that scope at JSR's npm registry:
+
 ```bash
-npm install -g megasthenes-cli
+echo "@jsr:registry=https://npm.jsr.io" >> ~/.npmrc
 ```
 
-Installs a `megasthenes` executable on your `PATH`. To skip the install: `npx megasthenes-cli ask --repo <url> --question "<text>"`.
+Then install globally with your package manager of choice:
+
+```bash
+# npm
+npm install -g @jsr/nilenso__megasthenes-cli
+
+# bun
+bun install -g @jsr/nilenso__megasthenes-cli
+```
+
+Either installs a `megasthenes` executable on your `PATH`.
 
 ## Configure
 
@@ -91,6 +103,8 @@ cd megasthenes-cli
 npm install
 npm test
 ```
+
+Published to JSR as [`@nilenso/megasthenes-cli`](https://jsr.io/@nilenso/megasthenes-cli).
 
 ## License
 
