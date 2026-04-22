@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { ArgParseError, parseAskArgs } from "../src/cli/ask-args.ts";
 
 describe("parseAskArgs", () => {

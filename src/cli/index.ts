@@ -1,11 +1,14 @@
-#!/usr/bin/env node
 /**
  * megasthenes CLI entry point.
  *
- * Currently dispatches the `ask` subcommand. Other subcommands (install-deps,
- * setup-sandbox) are owned by the upstream library binary.
+ * Dispatches the `ask` subcommand. `./bun-shim.ts` MUST be imported before
+ * anything that pulls in the upstream megasthenes library — the library
+ * calls `Bun.spawn` / `Bun.sleep` unconditionally, and the shim polyfills
+ * those onto `globalThis` via `node:child_process`. ESM guarantees this
+ * file's top-level side effects run in source order.
  */
 
+import "./bun-shim.ts";
 import { TOP_HELP } from "./ask-args.ts";
 import { runAsk } from "./ask.ts";
 

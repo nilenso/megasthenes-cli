@@ -1,5 +1,5 @@
-import { describe, expect, it } from "bun:test";
 import type { Step, TurnResult } from "@nilenso/megasthenes";
+import { describe, expect, it } from "vitest";
 import { extractFinalAnswer, formatSummary } from "../src/cli/ask-render.ts";
 
 const turn = (steps: Step[]): TurnResult => ({

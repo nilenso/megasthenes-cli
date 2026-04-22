@@ -1,7 +1,7 @@
-import { beforeAll, describe, expect, it } from "bun:test";
 import { chmodSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { beforeAll, describe, expect, it } from "vitest";
 import { findMissingTools, formatMissingToolsError } from "../src/cli/check-tools.ts";
 
 const sandbox = join(tmpdir(), `megasthenes-check-tools-${process.pid}-${Date.now()}`);
