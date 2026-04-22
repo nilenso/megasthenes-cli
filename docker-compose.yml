@@ -1,0 +1,14 @@
+services:
+  # Phoenix gives us a local trace UI plus OTLP ingestion for observability work.
+  phoenix:
+    image: arizephoenix/phoenix:latest
+    ports:
+      - "6006:6006" # Phoenix UI, HTTP API, and OTLP HTTP ingestion
+    environment:
+      - PHOENIX_WORKING_DIR=/data
+    volumes:
+      - phoenix_data:/data
+    restart: unless-stopped
+
+volumes:
+  phoenix_data:
