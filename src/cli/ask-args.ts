@@ -73,6 +73,13 @@ export function parseAskArgs(argv: readonly string[]): ParsedArgs {
 				out.help = true;
 				break;
 
+			case "--repo":
+				out.repo = consume();
+				break;
+			case "--question":
+				out.question = consume();
+				break;
+
 			case "--token":
 				out.token = consume();
 				break;
@@ -140,10 +147,18 @@ export function parseAskArgs(argv: readonly string[]): ParsedArgs {
 		}
 	}
 
-	if (positionals.length >= 1) out.repo = positionals[0];
-	if (positionals.length >= 2) out.question = positionals.slice(1).join(" ");
-	if (positionals.length > 2 && !positionals.slice(1).some((p) => p.includes(" "))) {
-		// Joined multiple bare words into a question — fine. (Quoting is recommended in --help.)
+	// Positionals fill whichever of repo/question weren't provided via flags.
+	// First unclaimed positional -> repo, remaining -> question (joined). Once
+	// both are set, any trailing positional is a user mistake worth surfacing.
+	let pi = 0;
+	if (out.repo === undefined && pi < positionals.length) out.repo = positionals[pi++];
+	if (out.question === undefined && pi < positionals.length) {
+		out.question = positionals.slice(pi).join(" ");
+		pi = positionals.length;
+	}
+	if (pi < positionals.length) {
+		const extras = positionals.slice(pi).join(" ");
+		throw new ArgParseError(`unexpected argument(s): ${extras}`);
 	}
 
 	return out;
@@ -152,11 +167,12 @@ export function parseAskArgs(argv: readonly string[]): ParsedArgs {
 export const ASK_HELP = `megasthenes ask — Ask a question about a Git repository and print the answer as markdown.
 
 Usage:
-  megasthenes ask <repo> <question> [options]
+  megasthenes ask --repo <url> --question "<text>" [options]
+  megasthenes ask <repo> <question> [options]           (positional shortcut)
 
-Arguments:
-  <repo>          Repository URL (GitHub or GitLab; forge auto-detected).
-  <question>      The question to ask, in plain language. Quote it.
+Arguments / required flags:
+  --repo <url>     Repository URL (GitHub or GitLab; forge auto-detected).
+  --question <q>   The question to ask, in plain language. Quote it.
 
 Repo options:
   --token <t>                   Auth token for private repositories.

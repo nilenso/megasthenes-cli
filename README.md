@@ -3,14 +3,14 @@
 Terminal CLI for [megasthenes](https://github.com/nilenso/megasthenes) — ask natural-language questions about any GitHub or GitLab repository and get a markdown-rendered, source-cited answer.
 
 ```bash
-megasthenes ask https://github.com/owner/repo "What does this project do?"
+megasthenes ask --repo https://github.com/owner/repo --question "What does this project do?"
 ```
 
 See the [megasthenes documentation](https://nilenso.github.io/megasthenes/) for the library this CLI wraps.
 
 ## Install
 
-Requires **Node.js ≥ 18** (or Bun) and `git`, `ripgrep`, `fd` on `PATH`.
+Requires **Node.js ≥ 18** and `git`, `ripgrep`, `fd` on `PATH`.
 
 ```bash
 # macOS
@@ -24,13 +24,13 @@ sudo pacman -S git ripgrep fd
 ```
 
 ```bash
-npm install -g megasthenes-cli     # or: bun add -g, pnpm add -g, yarn global add
+npm install -g megasthenes-cli     # or: pnpm add -g, yarn global add
 ```
 
 Or run one-off without installing:
 
 ```bash
-npx megasthenes-cli ask <repo> "<question>"
+npx megasthenes-cli ask --repo <url> --question "<text>"
 ```
 
 ## Configure
@@ -57,20 +57,22 @@ export MEGASTHENES_MODEL=anthropic/claude-sonnet-4.6
 ## Usage
 
 ```bash
+megasthenes ask --repo <url> --question "<text>" [options]
+# Positional shortcut (unquoted words after the URL are joined):
 megasthenes ask <repo-url> "<question>" [options]
 ```
 
 ```bash
 # Pick a provider and model
-megasthenes ask https://github.com/owner/repo "Audit error handling." \
+megasthenes ask --repo https://github.com/owner/repo --question "Audit error handling." \
   --provider anthropic --model claude-sonnet-4-6
 
 # Pin to a tag, stream tool calls to stderr
-megasthenes ask https://github.com/owner/repo "Summarize the data model." \
+megasthenes ask --repo https://github.com/owner/repo --question "Summarize the data model." \
   --commitish v2.3.0 --verbose
 
 # JSON output for jq
-megasthenes ask https://github.com/owner/repo "List public APIs." --json \
+megasthenes ask --repo https://github.com/owner/repo --question "List public APIs." --json \
   | jq '.usage, .metadata.latencyMs'
 ```
 
@@ -81,7 +83,7 @@ Run `megasthenes ask --help` for the full reference.
 For untrusted repositories, run tool execution in an isolated container. Stand up the sandbox worker following the [Sandboxed Execution guide](https://nilenso.github.io/megasthenes/guides/sandbox/), then point the CLI at it:
 
 ```bash
-megasthenes ask https://github.com/random/untrusted "What does this build script do?" \
+megasthenes ask --repo https://github.com/random/untrusted --question "What does this build script do?" \
   --sandbox-base-url http://localhost:8080 --sandbox-secret "$SANDBOX_SECRET"
 ```
 
@@ -102,10 +104,10 @@ megasthenes ask https://github.com/random/untrusted "What does this build script
 ```bash
 git clone https://github.com/nilenso/megasthenes-cli
 cd megasthenes-cli
-bun install
-bun test
-bun run typecheck
-bun run build         # produces dist/cli/index.js
+npm install
+npm test
+npm run typecheck
+npm run build         # produces dist/cli/index.js
 ```
 
 ## License
