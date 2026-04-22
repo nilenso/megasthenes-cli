@@ -203,7 +203,7 @@ export function resolveConfig(
 		model,
 		maxIterations: args.maxIterations ?? file.maxIterations ?? DEFAULT_MAX_ITERATIONS,
 		...(systemPrompt !== undefined ? { systemPrompt } : {}),
-		...(thinking !== undefined ? { thinking } : {}),
+		thinking,
 	};
 
 	const sandbox = resolveSandbox(args, file);
@@ -246,18 +246,13 @@ function resolveSystemPrompt(args: ParsedArgs, file: FileConfig): string | undef
 	return undefined;
 }
 
-function resolveThinking(args: ParsedArgs, file: FileConfig): ThinkingConfig | undefined {
+function resolveThinking(args: ParsedArgs, file: FileConfig): ThinkingConfig {
 	const thinkingMode = args.thinking ?? file.thinking;
 	const effort = args.thinkingEffort ?? file.thinkingEffort ?? DEFAULT_THINKING_EFFORT;
 	if (thinkingMode === "adaptive") {
 		return { type: "adaptive", effort };
 	}
-	// Effort arm is the default. Only emit a config when effort was explicitly
-	// set (via CLI or file); otherwise leave thinking off.
-	if (args.thinkingEffort !== undefined || file.thinkingEffort !== undefined) {
-		return { effort };
-	}
-	return undefined;
+	return { effort };
 }
 
 function resolveSandbox(args: ParsedArgs, file: FileConfig): SandboxClientConfig | undefined {

@@ -185,7 +185,7 @@ Model options:
   --system-prompt <s>           Inline system prompt override.
   --system-prompt-file <path>   Read the system prompt from a file.
 
-Thinking options:
+Thinking options (thinking is on by default at medium effort):
   --thinking adaptive           Use adaptive thinking (Anthropic 4.6 only). Default: effort mode.
   --thinking-effort <level>     low | medium | high. Default: medium.
 

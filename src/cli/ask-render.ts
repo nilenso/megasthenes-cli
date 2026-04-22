@@ -198,6 +198,31 @@ export function formatActivity(ev: StreamEvent): string | null {
 	}
 }
 
+// Thinking blocks share the answer-block geometry (indent + wrap width) so
+// they line up visually with the rendered answer, but are rendered dim and
+// prefixed with a label so they are clearly distinguishable as reasoning.
+const THINKING_LABEL_INDENT = "  ";
+const THINKING_BODY_INDENT = "    ";
+
+/**
+ * Render a complete thinking (or thinking_summary) block as dim, wrapped text
+ * on stderr. The block is prefixed with a dim diamond + label so it reads as
+ * an "aside" from the model's reasoning rather than part of the answer.
+ */
+export function formatThinkingBlock(text: string, label = "thinking"): string {
+	const trimmed = text.trim();
+	if (!trimmed) return "";
+	const cols = process.stdout.columns ?? 100;
+	const width = Math.max(
+		ANSWER_MIN_WIDTH,
+		Math.min(ANSWER_MAX_WIDTH, cols - THINKING_BODY_INDENT.length * 2),
+	);
+	const wrapped = trimmed.split("\n").flatMap((line) => wrapAnsiLine(line, width));
+	const header = `${THINKING_LABEL_INDENT}${ui.dim(sym.diamond)} ${ui.dim(ui.bold(label))}`;
+	const body = wrapped.map((l) => `${THINKING_BODY_INDENT}${ui.dim(l)}`).join("\n");
+	return `${header}\n${body}`;
+}
+
 /**
  * End-of-turn summary. The plain-text form is kept stable (substrings like
  * `N iter`, `X.Xs`, `in=…k`, `out=…k`, `provider/model`) so it remains

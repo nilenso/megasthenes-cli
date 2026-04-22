@@ -1,9 +1,10 @@
 /**
  * `megasthenes ask` — main command flow.
  *
- * Builds typed configs, opens a Session, drives `session.ask()`, optionally
- * forwards stream events to stderr in --verbose mode, then renders the final
- * answer (markdown or JSON) and exits with a structured exit code.
+ * Builds typed configs, opens a Session, drives `session.ask()`, and routes
+ * stream events to either a verbose stderr activity log or a single live
+ * spinner caption depending on --verbose. The final answer (markdown or JSON)
+ * always lands on stdout; process exits with a structured exit code.
  */
 
 import { Client, type ErrorType, type StreamEvent } from "@nilenso/megasthenes";
@@ -14,12 +15,13 @@ import {
 	formatActivity,
 	formatSetupLine,
 	formatSummary,
+	formatThinkingBlock,
 	formatToolLine,
 	renderMarkdown,
 } from "./ask-render.ts";
 import { findMissingTools, formatMissingToolsError } from "./check-tools.ts";
 import { setupTracing, shutdownTracing } from "./tracing.ts";
-import { StatusLine, sym, ui } from "./ui.ts";
+import { Spinner, StatusLine, sym, ui } from "./ui.ts";
 
 const ERROR_EXIT_CODES: Record<ErrorType, number> = {
 	internal_error: 1,
@@ -79,7 +81,7 @@ export async function runAsk(argv: readonly string[]): Promise<number> {
 			process.stderr.write(formatMissingToolsError(missing));
 			return 1;
 		}
-	} else {
+	} else if (verbose) {
 		const baseUrl = clientConfig.sandbox.baseUrl;
 		const sandboxStatus = new StatusLine();
 		// On a TTY we flash the neutral diamond while the probe runs, then
@@ -95,12 +97,18 @@ export async function runAsk(argv: readonly string[]): Promise<number> {
 	const onSigInt = () => controller.abort();
 	process.on("SIGINT", onSigInt);
 
+	// Non-verbose mode funnels all progress through a single live caption.
+	// Verbose mode never uses the spinner — it gets the full activity log.
+	const spinner = verbose ? undefined : new Spinner();
+	spinner?.start("Connecting…");
+
 	const client = new Client(clientConfig);
 	let session;
 	const cloneStatus = new StatusLine();
 	try {
 		session = await client.connect(sessionConfig, (msg: string) => {
 			if (verbose) cloneStatus.update(formatSetupLine("cloning", ui.dim(msg)));
+			else spinner?.update("Cloning…");
 		});
 		if (verbose) {
 			cloneStatus.finalize(
@@ -109,6 +117,7 @@ export async function runAsk(argv: readonly string[]): Promise<number> {
 		}
 	} catch (e) {
 		cloneStatus.clear();
+		spinner?.stop();
 		process.off("SIGINT", onSigInt);
 		const msg = e instanceof Error ? e.message : String(e);
 		process.stderr.write(`  ${ui.red(sym.cross)} ${ui.bold("connect failed")} ${ui.dim(msg)}\n`);
@@ -125,9 +134,13 @@ export async function runAsk(argv: readonly string[]): Promise<number> {
 			// can render a single, self-contained line per tool call.
 			const pendingParams = new Map<string, Record<string, unknown>>();
 			for await (const ev of stream) forwardEvent(ev, pendingParams);
+		} else {
+			spinner?.update("Exploring…");
+			for await (const ev of stream) updateSpinner(ev, spinner);
 		}
 
 		const turn = await stream.result();
+		spinner?.stop();
 
 		if (json) {
 			process.stdout.write(`${JSON.stringify(turn, null, 2)}\n`);
@@ -138,7 +151,11 @@ export async function runAsk(argv: readonly string[]): Promise<number> {
 				if (verbose) process.stderr.write("\n");
 				process.stdout.write(`${renderMarkdown(answer)}\n`);
 			}
-			process.stderr.write(`${formatSummary(turn.usage, turn.metadata, !turn.error)}\n`);
+			// The end-of-turn summary is extra context the user only wants when
+			// they've asked for verbose output; quiet mode shows just the answer.
+			if (verbose) {
+				process.stderr.write(`${formatSummary(turn.usage, turn.metadata, !turn.error)}\n`);
+			}
 		}
 
 		if (turn.error) {
@@ -152,6 +169,7 @@ export async function runAsk(argv: readonly string[]): Promise<number> {
 		}
 		return 0;
 	} finally {
+		spinner?.stop();
 		process.off("SIGINT", onSigInt);
 		try {
 			session.close();
@@ -164,9 +182,13 @@ export async function runAsk(argv: readonly string[]): Promise<number> {
 }
 
 /**
- * Render a single stream event as a line on stderr. We intentionally skip
- * iteration_start and tool_use_* events — each tool call is summarized once,
- * on tool_result, using the params we stashed from tool_use_end.
+ * Verbose mode: render each stream event as a stderr line. Thinking and
+ * thinking_summary events render as dim, indented blocks so the model's
+ * reasoning is clearly set apart from the tool activity log above it. We
+ * intentionally skip tool_use_* (the tool call is summarized once on
+ * tool_result, with params stashed from tool_use_end) and the raw
+ * text/text_delta events (the final answer is rendered from the TurnResult
+ * at the end to avoid double-printing).
  */
 function forwardEvent(ev: StreamEvent, pendingParams: Map<string, Record<string, unknown>>): void {
 	switch (ev.type) {
@@ -179,6 +201,16 @@ function forwardEvent(ev: StreamEvent, pendingParams: Map<string, Record<string,
 			process.stderr.write(`${formatToolLine(ev.name, params, ev.durationMs, ev.isError)}\n`);
 			return;
 		}
+		case "thinking": {
+			const block = formatThinkingBlock(ev.text, "thinking");
+			if (block) process.stderr.write(`${block}\n`);
+			return;
+		}
+		case "thinking_summary": {
+			const block = formatThinkingBlock(ev.text, "thinking summary");
+			if (block) process.stderr.write(`${block}\n`);
+			return;
+		}
 		case "compaction":
 		case "error": {
 			const line = formatActivity(ev);
@@ -188,6 +220,46 @@ function forwardEvent(ev: StreamEvent, pendingParams: Map<string, Record<string,
 		default:
 			return;
 	}
+}
+
+/**
+ * Non-verbose mode: drive the spinner caption from stream events so the user
+ * sees *what* the agent is doing ("Thinking…", "Exploring · read …") without
+ * the per-tool activity log. Unhandled events leave the caption unchanged.
+ */
+function updateSpinner(ev: StreamEvent, spinner: Spinner | undefined): void {
+	if (spinner === undefined) return;
+	switch (ev.type) {
+		case "thinking_delta":
+		case "thinking":
+			spinner.update("Thinking…");
+			return;
+		case "tool_use_end":
+			spinner.update(`Exploring · ${ev.name}${firstParamHint(ev.params)}`);
+			return;
+		case "text_delta":
+		case "text":
+			spinner.update("Writing answer…");
+			return;
+		case "compaction":
+			spinner.update("Compacting context…");
+			return;
+		default:
+			return;
+	}
+}
+
+/**
+ * Render a compact " key=value" hint for the first param of a tool call, for
+ * use in the quiet-mode spinner caption. Empty when params are empty.
+ */
+function firstParamHint(params: Record<string, unknown>): string {
+	const keys = Object.keys(params);
+	if (keys.length === 0) return "";
+	const k = keys[0]!;
+	const v = params[k];
+	const s = typeof v === "string" ? (v.length > 32 ? `${v.slice(0, 32)}…` : v) : String(v);
+	return ` ${k}=${s}`;
 }
 
 function safeStringify(v: unknown): string {

@@ -99,3 +99,56 @@ export class StatusLine {
 		}
 	}
 }
+
+/**
+ * Animated single-line status indicator for long-running work. On a TTY the
+ * spinner frame advances on a timer and the caption can be updated mid-flight;
+ * on non-TTY streams the spinner is silent so logs and pipes stay clean (the
+ * final answer on stdout is still emitted).
+ */
+export class Spinner {
+	private static readonly FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+	private static readonly INTERVAL_MS = 80;
+
+	private readonly isTTY = process.stderr.isTTY === true;
+	private frameIdx = 0;
+	private timer: NodeJS.Timeout | undefined;
+	private caption = "";
+	private active = false;
+
+	/** Start spinning with the given caption. No-op on non-TTY streams. */
+	start(caption: string): void {
+		this.caption = caption;
+		if (!this.isTTY) return;
+		this.active = true;
+		this.render();
+		this.timer = setInterval(() => {
+			this.frameIdx = (this.frameIdx + 1) % Spinner.FRAMES.length;
+			this.render();
+		}, Spinner.INTERVAL_MS);
+	}
+
+	/** Change the caption. Safe to call before start(); becomes initial caption. */
+	update(caption: string): void {
+		if (caption === this.caption) return;
+		this.caption = caption;
+		if (this.active) this.render();
+	}
+
+	/** Erase the live line and stop the timer. Idempotent. */
+	stop(): void {
+		if (this.timer !== undefined) {
+			clearInterval(this.timer);
+			this.timer = undefined;
+		}
+		if (this.active) {
+			process.stderr.write("\r\x1b[2K");
+			this.active = false;
+		}
+	}
+
+	private render(): void {
+		const frame = Spinner.FRAMES[this.frameIdx]!;
+		process.stderr.write(`\r\x1b[2K  ${ui.cyan(frame)} ${this.caption}`);
+	}
+}

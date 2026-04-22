@@ -28,10 +28,12 @@ describe("resolveConfig", () => {
 		expect(r.sessionConfig.model.id).toBe("gemini-2.5-pro");
 	});
 
-	it("builds the effort thinking arm only when --thinking-effort is set", () => {
-		const noThinking = resolveConfig(baseArgs(), {});
-		expect(noThinking.sessionConfig.thinking).toBeUndefined();
+	it("defaults thinking to medium effort when nothing is set", () => {
+		const r = resolveConfig(baseArgs(), {});
+		expect(r.sessionConfig.thinking).toEqual({ effort: "medium" });
+	});
 
+	it("respects an explicit --thinking-effort", () => {
 		const effort = resolveConfig(baseArgs(["--thinking-effort", "high"]), {});
 		expect(effort.sessionConfig.thinking).toEqual({ effort: "high" });
 	});
