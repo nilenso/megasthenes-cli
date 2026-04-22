@@ -29,7 +29,7 @@ This puts a `megasthenes` executable on your `PATH` (the npm package is `megasth
 Or run one-off without installing:
 
 ```bash
-npx -p megasthenes-cli megasthenes ask --repo <url> --question "<text>"
+npx megasthenes-cli ask --repo <url> --question "<text>"
 ```
 
 ## Configure
